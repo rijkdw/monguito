@@ -7,6 +7,8 @@ import {
 } from '../util/mongo-server';
 import { MongooseAuditableBookRepository } from './auditable.book.repository';
 
+const COLLECTION_NAME = 'auditablebooks';
+
 describe('Given an instance of auditable book repository and a user ID', () => {
   let bookRepository: Repository<AuditableBook>;
   const createdBy = '1234';
@@ -136,7 +138,7 @@ describe('Given an instance of auditable book repository and a user ID', () => {
   });
 
   afterEach(async () => {
-    await deleteAll('auditablebooks');
+    await deleteAll(COLLECTION_NAME);
   });
 
   afterAll(async () => {

@@ -19,6 +19,8 @@ import {
 } from '../util/mongo-server';
 import { MongooseBookTransactionalRepository } from './book.transactional-repository';
 
+const COLLECTION_NAME = 'books';
+
 const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
@@ -52,7 +54,7 @@ describe('Given an instance of book repository', () => {
           IllegalArgumentException,
         );
         expect(
-          await findOne({ isbn: booksToStore[0].isbn }, 'books'),
+          await findOne({ isbn: booksToStore[0].isbn }, COLLECTION_NAME),
         ).toBeNull();
       });
     });
@@ -67,7 +69,7 @@ describe('Given an instance of book repository', () => {
           IllegalArgumentException,
         );
         expect(
-          await findOne({ isbn: booksToStore[0].isbn }, 'books'),
+          await findOne({ isbn: booksToStore[0].isbn }, COLLECTION_NAME),
         ).toBeNull();
       });
     });
@@ -84,7 +86,7 @@ describe('Given an instance of book repository', () => {
         expect(
           await findOne(
             { isbn: { $in: [booksToStore[0].isbn, booksToStore[1].isbn] } },
-            'books',
+            COLLECTION_NAME,
           ),
         ).toBeNull();
       });
@@ -103,7 +105,7 @@ describe('Given an instance of book repository', () => {
                 bookRepository.saveAll(booksToStore),
               ).rejects.toThrow(ValidationException);
               expect(
-                await findOne({ isbn: booksToStore[0].isbn }, 'books'),
+                await findOne({ isbn: booksToStore[0].isbn }, COLLECTION_NAME),
               ).toBeNull();
             });
           });
@@ -131,7 +133,7 @@ describe('Given an instance of book repository', () => {
                 bookRepository.saveAll(booksToStore),
               ).rejects.toThrow(ValidationException);
               expect(
-                await findOne({ isbn: booksToStore[0].isbn }, 'books'),
+                await findOne({ isbn: booksToStore[0].isbn }, COLLECTION_NAME),
               ).toBeNull();
             });
           });
@@ -157,7 +159,7 @@ describe('Given an instance of book repository', () => {
             let paperBookToStore = paperBookFixture({ isbn: '1942788342' });
             let storedPaperBookId = await insert(
               paperBookToStore,
-              'books',
+              COLLECTION_NAME,
               PaperBook.name,
             );
             storedPaperBook1 = new PaperBook({
@@ -168,7 +170,7 @@ describe('Given an instance of book repository', () => {
             paperBookToStore = paperBookFixture({ isbn: '1942788343' });
             storedPaperBookId = await insert(
               paperBookToStore,
-              'books',
+              COLLECTION_NAME,
               PaperBook.name,
             );
             storedPaperBook2 = new PaperBook({
@@ -227,7 +229,7 @@ describe('Given an instance of book repository', () => {
 
           beforeEach(async () => {
             const bookToStore = bookFixture({ isbn: '1942788342' });
-            const storedBookId = await insert(bookToStore, 'books');
+            const storedBookId = await insert(bookToStore, COLLECTION_NAME);
             storedBook = new Book({
               ...bookToStore,
               id: storedBookId,
@@ -236,7 +238,7 @@ describe('Given an instance of book repository', () => {
             const paperBookToStore = paperBookFixture({ isbn: '1942788343' });
             const storedPaperBookId = await insert(
               paperBookToStore,
-              'books',
+              COLLECTION_NAME,
               PaperBook.name,
             );
             storedPaperBook = new PaperBook({
@@ -298,7 +300,7 @@ describe('Given an instance of book repository', () => {
           const paperBookToStore = paperBookFixture({ isbn: '1942788342' });
           const storedPaperBookId = await insert(
             paperBookToStore,
-            'books',
+            COLLECTION_NAME,
             PaperBook.name,
           );
           storedPaperBook = new PaperBook({
@@ -453,7 +455,7 @@ describe('Given an instance of book repository', () => {
     });
 
     afterEach(async () => {
-      await deleteAll('books');
+      await deleteAll(COLLECTION_NAME);
     });
   });
 
@@ -462,7 +464,7 @@ describe('Given an instance of book repository', () => {
 
     beforeEach(async () => {
       const bookToStore = bookFixture({ isbn: '1942788342' });
-      const storedBookId = await insert(bookToStore, 'books');
+      const storedBookId = await insert(bookToStore, COLLECTION_NAME);
       storedBook = new Book({
         ...bookToStore,
         id: storedBookId,
@@ -471,7 +473,7 @@ describe('Given an instance of book repository', () => {
       const paperBookToStore = paperBookFixture({ isbn: '1942788343' });
       const storedPaperBookId = await insert(
         paperBookToStore,
-        'books',
+        COLLECTION_NAME,
         PaperBook.name,
       );
       storedPaperBook = new PaperBook({
@@ -538,7 +540,7 @@ describe('Given an instance of book repository', () => {
     });
 
     afterEach(async () => {
-      await deleteAll('books');
+      await deleteAll(COLLECTION_NAME);
     });
   });
 

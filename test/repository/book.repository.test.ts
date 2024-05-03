@@ -20,6 +20,8 @@ import {
 } from '../util/mongo-server';
 import { BookRepository, MongooseBookRepository } from './book.repository';
 
+const COLLECTION_NAME = 'books';
+
 describe('Given an instance of book repository', () => {
   let bookRepository: BookRepository;
   let storedBook: Book;
@@ -60,7 +62,7 @@ describe('Given an instance of book repository', () => {
         const paperBookToStore = paperBookFixture();
         const storedPaperBookId = await insert(
           paperBookToStore,
-          'books',
+          COLLECTION_NAME,
           PaperBook.name,
         );
         storedPaperBook = new PaperBook({
@@ -70,7 +72,7 @@ describe('Given an instance of book repository', () => {
       });
 
       afterEach(async () => {
-        await deleteAll('books');
+        await deleteAll(COLLECTION_NAME);
       });
 
       it('retrieves the book', async () => {
@@ -112,7 +114,7 @@ describe('Given an instance of book repository', () => {
 
         const storedPaperBookId = await insert(
           paperBookToStore,
-          'books',
+          COLLECTION_NAME,
           PaperBook.name,
         );
         storedPaperBook = new PaperBook({
@@ -122,7 +124,7 @@ describe('Given an instance of book repository', () => {
 
         const storedAudioBookId = await insert(
           audioBookToStore,
-          'books',
+          COLLECTION_NAME,
           AudioBook.name,
         );
         storedAudioBook = new AudioBook({
@@ -152,7 +154,7 @@ describe('Given an instance of book repository', () => {
       });
 
       afterEach(async () => {
-        await deleteAll('books');
+        await deleteAll(COLLECTION_NAME);
       });
     });
   });
@@ -184,7 +186,7 @@ describe('Given an instance of book repository', () => {
     describe('and there is one book matching the given search value', () => {
       beforeEach(async () => {
         const bookToStore = bookFixture();
-        const storedBookId = await insert(bookToStore, 'books');
+        const storedBookId = await insert(bookToStore, COLLECTION_NAME);
         storedBook = new Book({
           ...bookToStore,
           id: storedBookId,
@@ -192,7 +194,7 @@ describe('Given an instance of book repository', () => {
       });
 
       afterEach(async () => {
-        await deleteAll('books');
+        await deleteAll(COLLECTION_NAME);
       });
 
       it('returns a book matching the given search value', async () => {
@@ -206,7 +208,7 @@ describe('Given an instance of book repository', () => {
   describe('when searching books', () => {
     beforeEach(async () => {
       const bookToStore = bookFixture();
-      const storedBookId = await insert(bookToStore, 'books');
+      const storedBookId = await insert(bookToStore, COLLECTION_NAME);
       storedBook = new Book({
         ...bookToStore,
         id: storedBookId,
@@ -215,7 +217,7 @@ describe('Given an instance of book repository', () => {
       const paperBookToStore = paperBookFixture();
       const storedPaperBookId = await insert(
         paperBookToStore,
-        'books',
+        COLLECTION_NAME,
         PaperBook.name,
       );
       storedPaperBook = new PaperBook({
@@ -226,7 +228,7 @@ describe('Given an instance of book repository', () => {
       const audioBookToStore = audioBookFixture();
       const storedAudioBookId = await insert(
         audioBookToStore,
-        'books',
+        COLLECTION_NAME,
         AudioBook.name,
       );
       storedAudioBook = new AudioBook({
@@ -236,7 +238,7 @@ describe('Given an instance of book repository', () => {
     });
 
     afterEach(async () => {
-      await deleteAll('books');
+      await deleteAll(COLLECTION_NAME);
     });
 
     describe('and not providing any optional parameter', () => {
@@ -980,7 +982,7 @@ describe('Given an instance of book repository', () => {
             describe('and some field values are invalid', () => {
               beforeEach(async () => {
                 const bookToStore = bookFixture();
-                const storedBookId = await insert(bookToStore, 'books');
+                const storedBookId = await insert(bookToStore, COLLECTION_NAME);
                 storedBook = new Book({
                   ...bookToStore,
                   id: storedBookId,
@@ -988,7 +990,7 @@ describe('Given an instance of book repository', () => {
               });
 
               afterEach(async () => {
-                await deleteAll('books');
+                await deleteAll(COLLECTION_NAME);
               });
 
               it('throws an exception', async () => {
@@ -1058,7 +1060,7 @@ describe('Given an instance of book repository', () => {
         describe('and that is of supertype Book', () => {
           beforeEach(async () => {
             const bookToStore = bookFixture();
-            const storedBookId = await insert(bookToStore, 'books');
+            const storedBookId = await insert(bookToStore, COLLECTION_NAME);
             storedBook = new Book({
               ...bookToStore,
               id: storedBookId,
@@ -1066,7 +1068,7 @@ describe('Given an instance of book repository', () => {
           });
 
           afterEach(async () => {
-            await deleteAll('books');
+            await deleteAll(COLLECTION_NAME);
           });
 
           describe('and that specifies partial contents of the supertype', () => {
@@ -1124,7 +1126,7 @@ describe('Given an instance of book repository', () => {
             const paperBookToStore = paperBookFixture();
             const storedPaperBookId = await insert(
               paperBookToStore,
-              'books',
+              COLLECTION_NAME,
               PaperBook.name,
             );
             storedPaperBook = new PaperBook({
@@ -1135,7 +1137,7 @@ describe('Given an instance of book repository', () => {
             const audioBookToStore = audioBookFixture();
             const storedAudioBookId = await insert(
               audioBookToStore,
-              'books',
+              COLLECTION_NAME,
               AudioBook.name,
             );
             storedAudioBook = new AudioBook({
@@ -1145,7 +1147,7 @@ describe('Given an instance of book repository', () => {
           });
 
           afterEach(async () => {
-            await deleteAll('books');
+            await deleteAll(COLLECTION_NAME);
           });
 
           describe('and that specifies partial contents of the subtype', () => {
@@ -1254,7 +1256,7 @@ describe('Given an instance of book repository', () => {
     describe('by the ID of an existent book', () => {
       beforeEach(async () => {
         const bookToStore = bookFixture();
-        const storedBookId = await insert(bookToStore, 'books');
+        const storedBookId = await insert(bookToStore, COLLECTION_NAME);
         storedBook = new Book({
           ...bookToStore,
           id: storedBookId,
@@ -1262,13 +1264,13 @@ describe('Given an instance of book repository', () => {
       });
 
       afterEach(async () => {
-        await deleteAll('books');
+        await deleteAll(COLLECTION_NAME);
       });
 
       it('returns true and the book has been effectively deleted', async () => {
         const isDeleted = await bookRepository.deleteById(storedBook.id!);
         expect(isDeleted).toBe(true);
-        expect(await findById(storedBook.id!, 'books')).toBe(null);
+        expect(await findById(storedBook.id!, COLLECTION_NAME)).toBe(null);
       });
     });
   });

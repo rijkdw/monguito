@@ -16,11 +16,14 @@ export class MongooseBookRepository
   implements BookRepository
 {
   constructor() {
-    super({
-      Default: { type: Book, schema: BookSchema },
-      PaperBook: { type: PaperBook, schema: PaperBookSchema },
-      AudioBook: { type: AudioBook, schema: AudioBookSchema },
-    });
+    super(
+      {
+        Default: { type: Book, schema: BookSchema },
+        PaperBook: { type: PaperBook, schema: PaperBookSchema },
+        AudioBook: { type: AudioBook, schema: AudioBookSchema },
+      },
+      { collectionName: 'books_123' },
+    );
   }
 
   async findByIsbn<T extends Book>(isbn: string): Promise<Optional<T>> {

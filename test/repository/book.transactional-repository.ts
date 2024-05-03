@@ -4,10 +4,13 @@ import { AudioBookSchema, BookSchema, PaperBookSchema } from './book.schema';
 
 export class MongooseBookTransactionalRepository extends MongooseTransactionalRepository<Book> {
   constructor() {
-    super({
-      Default: { type: Book, schema: BookSchema },
-      PaperBook: { type: PaperBook, schema: PaperBookSchema },
-      AudioBook: { type: AudioBook, schema: AudioBookSchema },
-    });
+    super(
+      {
+        Default: { type: Book, schema: BookSchema },
+        PaperBook: { type: PaperBook, schema: PaperBookSchema },
+        AudioBook: { type: AudioBook, schema: AudioBookSchema },
+      },
+      { collectionName: 'books_transactional' },
+    );
   }
 }

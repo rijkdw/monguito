@@ -20,7 +20,7 @@ import {
 } from '../util/mongo-server';
 import { BookRepository, MongooseBookRepository } from './book.repository';
 
-const COLLECTION_NAME = 'books';
+const COLLECTION_NAME = 'books_123';
 
 describe('Given an instance of book repository', () => {
   let bookRepository: BookRepository;

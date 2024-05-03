@@ -19,7 +19,7 @@ import {
 } from '../util/mongo-server';
 import { MongooseBookTransactionalRepository } from './book.transactional-repository';
 
-const COLLECTION_NAME = 'books';
+const COLLECTION_NAME = 'books_transactional';
 
 const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));

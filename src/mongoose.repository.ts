@@ -22,6 +22,11 @@ import {
 } from './util/operation-options';
 import { Constructor, TypeMap, TypeMapImpl } from './util/type-map';
 
+export type MongooseRepositoryOptions = {
+  connection?: Connection;
+  collectionName?: string;
+};
+
 /**
  * Abstract Mongoose-based implementation of the {@link Repository} interface.
  */
@@ -30,18 +35,22 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
 {
   private readonly typeMap: TypeMapImpl<T>;
   protected readonly entityModel: Model<T>;
+  protected readonly connection?: Connection;
+  protected readonly collectionName?: string;
 
   /**
    * Sets up the underlying configuration to enable database operation execution.
    * @param {TypeMap<T>} typeMap a map of domain object types supported by this repository.
-   * @param {Connection=} connection (optional) a MongoDB instance connection.
+   * @param {MongooseRepositoryOptions=} options (optional) TODO.
    */
   protected constructor(
     typeMap: TypeMap<T>,
-    protected readonly connection?: Connection,
+    options?: MongooseRepositoryOptions,
   ) {
     this.typeMap = new TypeMapImpl(typeMap);
-    this.entityModel = this.createEntityModel(connection);
+    this.connection = options?.connection;
+    this.collectionName = options?.collectionName;
+    this.entityModel = this.createEntityModel();
   }
 
   /** @inheritdoc */
@@ -186,18 +195,20 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
     );
   }
 
-  private createEntityModel(connection?: Connection) {
+  private createEntityModel() {
     let entityModel;
     const supertypeData = this.typeMap.getSupertypeData();
-    if (connection) {
-      entityModel = connection.model<T>(
+    if (this.connection) {
+      entityModel = this.connection.model<T>(
         supertypeData.type.name,
         supertypeData.schema,
+        this.collectionName,
       );
     } else {
       entityModel = mongoose.model<T>(
         supertypeData.type.name,
         supertypeData.schema,
+        this.collectionName,
       );
     }
     for (const subtypeData of this.typeMap.getSubtypesData()) {

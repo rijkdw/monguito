@@ -7,7 +7,7 @@ import {
 } from '../util/mongo-server';
 import { MongooseAuditableBookRepository } from './auditable.book.repository';
 
-const COLLECTION_NAME = 'auditablebooks';
+const COLLECTION_NAME = 'auditablebooks_123';
 
 describe('Given an instance of auditable book repository and a user ID', () => {
   let bookRepository: Repository<AuditableBook>;

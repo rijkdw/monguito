@@ -1,5 +1,8 @@
-import { ClientSession, Connection, UpdateQuery } from 'mongoose';
-import { MongooseRepository } from './mongoose.repository';
+import { ClientSession, UpdateQuery } from 'mongoose';
+import {
+  MongooseRepository,
+  MongooseRepositoryOptions,
+} from './mongoose.repository';
 import { PartialEntityWithId } from './repository';
 import { TransactionalRepository } from './transactional-repository';
 import { Entity } from './util/entity';
@@ -24,10 +27,13 @@ export abstract class MongooseTransactionalRepository<
   /**
    * Sets up the underlying configuration to enable database operation execution.
    * @param {TypeMap<T>} typeMap a map of domain object types supported by this repository.
-   * @param {Connection=} connection (optional) a MongoDB instance connection.
+   * @param {MongooseRepositoryOptions=} options (optional) TODO.
    */
-  protected constructor(typeMap: TypeMap<T>, connection?: Connection) {
-    super(typeMap, connection);
+  protected constructor(
+    typeMap: TypeMap<T>,
+    options?: MongooseRepositoryOptions,
+  ) {
+    super(typeMap, options);
   }
 
   /** @inheritdoc */

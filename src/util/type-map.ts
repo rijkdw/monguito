@@ -64,7 +64,13 @@ export class TypeMapImpl<T extends Entity> {
         'The given map must include domain supertype data',
       );
     }
-    this.supertypeData = map.Default as SupertypeData<T>;
+    const superType = map.Default;
+    if (!('name' in superType) && !('type' in superType)) {
+      throw new IllegalArgumentException(
+        'The given domain supertype data must either have a name or a type',
+      );
+    }
+    this.supertypeData = superType as SupertypeData<T>;
     this.typeNames = Object.keys(map).filter((key) => key !== 'Default');
     this.subtypeData = Object.entries(map).reduce((accumulator, entry) => {
       if (entry[0] !== 'Default') {

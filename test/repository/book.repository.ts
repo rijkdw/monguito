@@ -11,6 +11,8 @@ export interface BookRepository extends Repository<Book> {
   findByIsbn: <T extends Book>(isbn: string) => Promise<Optional<T>>;
 }
 
+const OPTIONS = { collectionName: 'books_123' };
+
 export class MongooseBookRepository
   extends MongooseRepository<Book>
   implements BookRepository
@@ -22,7 +24,7 @@ export class MongooseBookRepository
         PaperBook: { type: PaperBook, schema: PaperBookSchema },
         AudioBook: { type: AudioBook, schema: AudioBookSchema },
       },
-      { collectionName: 'books_123' },
+      OPTIONS,
     );
   }
 
@@ -34,6 +36,9 @@ export class MongooseBookRepository
   }
 }
 
+class PaperBook2 extends PaperBook {}
+class AudioBook2 extends AudioBook {}
+
 export class MongooseBookRepositoryWithoutBaseClass
   extends MongooseRepository<Book>
   implements BookRepository
@@ -42,10 +47,10 @@ export class MongooseBookRepositoryWithoutBaseClass
     super(
       {
         Default: { name: 'Book', schema: BookSchema },
-        PaperBook: { type: PaperBook, schema: PaperBookSchema },
-        AudioBook: { type: AudioBook, schema: AudioBookSchema },
+        PaperBook: { type: PaperBook2, schema: PaperBookSchema },
+        AudioBook: { type: AudioBook2, schema: AudioBookSchema },
       },
-      { collectionName: 'books_123' },
+      OPTIONS,
     );
   }
 

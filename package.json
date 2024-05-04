@@ -1,62 +1,7 @@
 {
-  "name": "monguito",
+  "name": "monguito-fork",
   "version": "5.1.0",
-  "description": "MongoDB Abstract Repository implementation for Node.js",
-  "author": {
-    "name": "Josu Martinez",
-    "email": "josu.martinez@gmail.com"
-  },
-  "license": "MIT",
-  "homepage": "https://github.com/josuto/monguito#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/josuto/monguito.git"
-  },
-  "bugs": {
-    "url": "https://github.com/josuto/monguito/issues",
-    "email": "josu.martinez@gmail.com"
-  },
-  "engines": {
-    "node": ">=18.18.0"
-  },
-  "keywords": [
-    "node",
-    "nodejs",
-    "node.js",
-    "nest",
-    "nestjs",
-    "nest.js",
-    "repository",
-    "abstract repository",
-    "generic repository",
-    "custom repository",
-    "repository pattern",
-    "polymorphic",
-    "polymorphism",
-    "polymorphic repository",
-    "polymorphic pattern",
-    "mongo",
-    "mongodb",
-    "mongoose",
-    "mongoosejs",
-    "mongoose.js"
-  ],
   "type": "module",
-  "source": "./src/index.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/repo.cjs",
-      "default": "./dist/repo.modern.js"
-    }
-  },
-  "main": "./dist/repo.cjs",
-  "module": "./dist/repo.module.js",
-  "unpkg": "./dist/repo.umd.js",
-  "files": [
-    "dist"
-  ],
-  "types": "./dist/index.d.ts",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "microbundle",

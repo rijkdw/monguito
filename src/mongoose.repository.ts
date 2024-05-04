@@ -183,9 +183,13 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
   ): S | null {
     if (!document) return null;
     const entityKey = document.get('__t');
-    const constructor: Constructor<S> | undefined = entityKey
-      ? (this.typeMap.getSubtypeData(entityKey)?.type as Constructor<S>)
-      : (this.typeMap.getSupertypeData().type as Constructor<S>);
+    let constructor: Constructor<S> | undefined;
+    if (entityKey) {
+      constructor = this.typeMap.getSubtypeData(entityKey)
+        ?.type as Constructor<S>;
+    } else {
+      constructor = this.typeMap.getSupertypeType() as Constructor<S>;
+    }
     if (constructor) {
       // safe instantiation as no abstract class instance can be stored in the first place
       return new constructor(document.toObject());
@@ -198,18 +202,16 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
   private createEntityModel() {
     let entityModel;
     const supertypeData = this.typeMap.getSupertypeData();
+    const modelName = this.typeMap.getSupertypeName();
+    const schema = supertypeData.schema;
     if (this.connection) {
       entityModel = this.connection.model<T>(
-        supertypeData.type.name,
-        supertypeData.schema,
+        modelName,
+        schema,
         this.collectionName,
       );
     } else {
-      entityModel = mongoose.model<T>(
-        supertypeData.type.name,
-        supertypeData.schema,
-        this.collectionName,
-      );
+      entityModel = mongoose.model<T>(modelName, schema, this.collectionName);
     }
     for (const subtypeData of this.typeMap.getSubtypesData()) {
       entityModel.discriminator(subtypeData.type.name, subtypeData.schema);

@@ -59,8 +59,7 @@ export class TypeMapImpl<T extends Entity> {
         'The given map must include domain supertype data',
       );
     }
-    const superType = map.Default;
-    this.supertypeData = superType as SupertypeData<T>;
+    this.supertypeData = map.Default as SupertypeData<T>;
     this.typeNames = Object.keys(map).filter((key) => key !== 'Default');
     this.subtypeData = Object.entries(map).reduce((accumulator, entry) => {
       if (entry[0] !== 'Default') {
@@ -76,23 +75,23 @@ export class TypeMapImpl<T extends Entity> {
     return index !== -1 ? this.subtypeData[index] : undefined;
   }
 
-  getSupertypeData() {
+  getSupertypeData(): SupertypeData<T> {
     return this.supertypeData;
   }
 
-  getSupertypeName() {
+  getSupertypeName(): string | undefined {
     return this.supertypeData.type?.name;
   }
 
-  getSupertypeType() {
+  getSupertypeType(): AbsConstructor<T> | undefined {
     return this.supertypeData.type;
   }
 
-  getSubtypesData() {
+  getSubtypesData(): SubtypeData<T>[] {
     return this.subtypeData;
   }
 
-  has(type: string) {
+  has(type: string): boolean {
     return (
       type === this.getSupertypeName() || this.typeNames.indexOf(type) !== -1
     );

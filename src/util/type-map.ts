@@ -85,9 +85,7 @@ export class TypeMapImpl<T extends Entity> {
   }
 
   getSupertypeType() {
-    if ('type' in this.supertypeData) {
-      return this.supertypeData.type;
-    }
+    return this.supertypeData.type;
   }
 
   getSubtypesData() {

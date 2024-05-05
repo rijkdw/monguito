@@ -18,11 +18,14 @@ import {
   insert,
   setupConnection,
 } from '../util/mongo-server';
-import { BookRepository, MongooseBookRepository } from './book.repository';
+import {
+  BookRepository,
+  MongooseBookRepositoryWithBaseClass,
+} from './book.repository';
 
-const COLLECTION_NAME = 'books_123';
+const COLLECTION_NAME = 'books';
 
-describe('Given an instance of book repository', () => {
+describe('Given an instance of book repository with a base Book class defined', () => {
   let bookRepository: BookRepository;
   let storedBook: Book;
   let storedPaperBook: PaperBook;
@@ -30,7 +33,7 @@ describe('Given an instance of book repository', () => {
 
   beforeAll(async () => {
     await setupConnection(MongoServerType.STANDALONE);
-    bookRepository = new MongooseBookRepository();
+    bookRepository = new MongooseBookRepositoryWithBaseClass();
   });
 
   describe('when searching a book by ID', () => {
@@ -102,7 +105,9 @@ describe('Given an instance of book repository', () => {
 
     describe('by a filter matching no book', () => {
       it('retrieves an empty book', async () => {
-        const book = await bookRepository.findOne({ title: 'The Hobbit' });
+        const book = await bookRepository.findOne({
+          title: 'The Hobbit',
+        });
         expect(book).toEqual(Optional.empty());
       });
     });

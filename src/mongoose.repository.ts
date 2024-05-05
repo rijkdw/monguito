@@ -25,6 +25,7 @@ import { Constructor, TypeMap, TypeMapImpl } from './util/type-map';
 export type MongooseRepositoryOptions = {
   connection?: Connection;
   collectionName?: string;
+  modelName?: string;
 };
 
 /**
@@ -37,6 +38,7 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
   protected readonly entityModel: Model<T>;
   protected readonly connection?: Connection;
   protected readonly collectionName?: string;
+  protected readonly modelName?: string;
 
   /**
    * Sets up the underlying configuration to enable database operation execution.
@@ -50,15 +52,84 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
     this.typeMap = new TypeMapImpl(typeMap);
     this.connection = options?.connection;
     this.collectionName = options?.collectionName;
+    this.modelName = options?.modelName;
     this.entityModel = this.createEntityModel();
+  }
+
+  private createEntityModel() {
+    let entityModel;
+    const supertypeData = this.typeMap.getSupertypeData();
+    const modelName = this.typeMap.getSupertypeName() ?? this.modelName;
+    if (!modelName) {
+      throw new IllegalArgumentException(
+        'Either a base class must be provided or the model name must be specified in the options.',
+      );
+    }
+    const schema = supertypeData.schema;
+    if (this.connection) {
+      entityModel = this.connection.model<T>(
+        modelName,
+        schema,
+        this.collectionName,
+      );
+    } else {
+      entityModel = mongoose.model<T>(modelName, schema, this.collectionName);
+    }
+    for (const subtypeData of this.typeMap.getSubtypesData()) {
+      entityModel.discriminator(subtypeData.type.name, subtypeData.schema);
+    }
+    return entityModel;
+  }
+
+  /**
+   * Instantiates a persistable domain object from the given Mongoose Document.
+   * @param {HydratedDocument<S> | null} document the given Mongoose Document.
+   * @returns {S | null} the resulting persistable domain object instance.
+   * @throws {UndefinedConstructorException} if there is no constructor available.
+   */
+  protected instantiateFrom<S extends T>(
+    document: HydratedDocument<S> | null,
+  ): S | null {
+    if (!document) return null;
+    const entityKey = document.get('__t');
+    let constructor: Constructor<S> | undefined;
+    if (entityKey) {
+      constructor = this.typeMap.getSubtypeData(entityKey)
+        ?.type as Constructor<S>;
+    } else {
+      constructor = this.typeMap.getSupertypeType() as Constructor<S>;
+    }
+    if (constructor) {
+      // safe instantiation as no abstract class instance can be stored in the first place
+      return new constructor(document.toObject());
+    }
+    throw new UndefinedConstructorException(
+      `There is no registered instance constructor for the document with ID ${document.id}`,
+    );
+  }
+
+  private setDiscriminatorKeyOn<S extends T>(
+    entity: S | PartialEntityWithId<S>,
+  ): void {
+    const entityClassName = entity['constructor']['name'];
+    const isSubtype = entityClassName !== this.typeMap.getSupertypeName();
+    const hasEntityDiscriminatorKey = '__t' in entity;
+    if (isSubtype && !hasEntityDiscriminatorKey) {
+      entity['__t'] = entityClassName;
+    }
+  }
+
+  private createDocumentAndSetUserId<S extends T>(entity: S, userId?: string) {
+    const document = new this.entityModel(entity);
+    if (isAuditable(entity)) {
+      if (userId) document.$locals.userId = userId;
+      document.__v = 0;
+    }
+    return document;
   }
 
   /** @inheritdoc */
   async deleteById(id: string, options?: DeleteByIdOptions): Promise<boolean> {
-    if (options?.connection)
-      console.warn(
-        'Since v5.0.1 "options.connection" is deprecated as is of no longer use.',
-      );
     if (!id) throw new IllegalArgumentException('The given ID must be valid');
     const isDeleted = await this.entityModel.findByIdAndDelete(id, {
       session: options?.session,
@@ -68,10 +139,6 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
 
   /** @inheritdoc */
   async findAll<S extends T>(options?: FindAllOptions): Promise<S[]> {
-    if (options?.connection)
-      console.warn(
-        'Since v5.0.1 "options.connection" is deprecated as is of no longer use.',
-      );
     if (options?.pageable?.pageNumber && options?.pageable?.pageNumber < 0) {
       throw new IllegalArgumentException(
         'The given page number must be a positive number',
@@ -107,10 +174,6 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
     id: string,
     options?: FindByIdOptions,
   ): Promise<Optional<S>> {
-    if (options?.connection)
-      console.warn(
-        'Since v5.0.1 "options.connection" is deprecated as is of no longer use.',
-      );
     if (!id) throw new IllegalArgumentException('The given ID must be valid');
     const document = await this.entityModel
       .findById(id)
@@ -124,14 +187,6 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
     filters: any,
     options?: FindOneOptions,
   ): Promise<Optional<S>> {
-    if (options?.connection)
-      console.warn(
-        'Since v5.0.1 "options.connection" is deprecated as is of no longer use.',
-      );
-    if (filters)
-      console.warn(
-        'Since v5.0.1 the "filters" parameter is deprecated. Use "options.filters" instead.',
-      );
     if (!filters && !options?.filters)
       throw new IllegalArgumentException('Missing search criteria (filters)');
     const document = await this.entityModel
@@ -141,15 +196,38 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
     return Optional.ofNullable(this.instantiateFrom(document) as S);
   }
 
+  /**
+   * Inserts an entity.
+   * @param {S} entity the entity to insert.
+   * @param {SaveOptions=} options (optional) insert operation options.
+   * @returns {Promise<S>} the inserted entity.
+   * @throws {IllegalArgumentException} if the given entity is `undefined` or `null`.
+   */
+  protected async insert<S extends T>(
+    entity: S,
+    options?: SaveOptions,
+  ): Promise<S> {
+    if (!entity)
+      throw new IllegalArgumentException('The given entity must be valid');
+    const entityClassName = entity['constructor']['name'];
+    if (!this.typeMap.has(entityClassName)) {
+      throw new IllegalArgumentException(
+        `The entity with name ${entityClassName} is not included in the setup of the custom repository`,
+      );
+    }
+    this.setDiscriminatorKeyOn(entity);
+    const document = this.createDocumentAndSetUserId(entity, options?.userId);
+    const insertedDocument = (await document.save({
+      session: options?.session,
+    })) as HydratedDocument<S>;
+    return this.instantiateFrom(insertedDocument) as S;
+  }
+
   /** @inheritdoc */
   async save<S extends T>(
     entity: S | PartialEntityWithId<S>,
     options?: SaveOptions,
   ): Promise<S> {
-    if (options?.connection)
-      console.warn(
-        'Since v5.0.1 "options.connection" is deprecated as is of no longer use.',
-      );
     if (!entity)
       throw new IllegalArgumentException('The given entity must be valid');
     try {
@@ -168,104 +246,14 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
           error,
         );
       }
+      if (error instanceof UndefinedConstructorException) {
+        const entityClassName = entity['constructor']['name'];
+        throw new IllegalArgumentException(
+          `The entity with name ${entityClassName} is not included in the setup of the custom repository`,
+        );
+      }
       throw error;
     }
-  }
-
-  /**
-   * Instantiates a persistable domain object from the given Mongoose Document.
-   * @param {HydratedDocument<S> | null} document the given Mongoose Document.
-   * @returns {S | null} the resulting persistable domain object instance.
-   * @throws {UndefinedConstructorException} if there is no constructor available.
-   */
-  protected instantiateFrom<S extends T>(
-    document: HydratedDocument<S> | null,
-  ): S | null {
-    if (!document) return null;
-    const entityKey = document.get('__t');
-    const constructor: Constructor<S> | undefined = entityKey
-      ? (this.typeMap.getSubtypeData(entityKey)?.type as Constructor<S>)
-      : (this.typeMap.getSupertypeData().type as Constructor<S>);
-    if (constructor) {
-      // safe instantiation as no abstract class instance can be stored in the first place
-      return new constructor(document.toObject());
-    }
-    throw new UndefinedConstructorException(
-      `There is no registered instance constructor for the document with ID ${document.id}`,
-    );
-  }
-
-  private createEntityModel() {
-    let entityModel;
-    const supertypeData = this.typeMap.getSupertypeData();
-    if (this.connection) {
-      entityModel = this.connection.model<T>(
-        supertypeData.type.name,
-        supertypeData.schema,
-        this.collectionName,
-      );
-    } else {
-      entityModel = mongoose.model<T>(
-        supertypeData.type.name,
-        supertypeData.schema,
-        this.collectionName,
-      );
-    }
-    for (const subtypeData of this.typeMap.getSubtypesData()) {
-      entityModel.discriminator(subtypeData.type.name, subtypeData.schema);
-    }
-    return entityModel;
-  }
-
-  /**
-   * Inserts an entity.
-   * @param {S} entity the entity to insert.
-   * @param {SaveOptions=} options (optional) insert operation options.
-   * @returns {Promise<S>} the inserted entity.
-   * @throws {IllegalArgumentException} if the given entity is `undefined` or `null`.
-   */
-  protected async insert<S extends T>(
-    entity: S,
-    options?: SaveOptions,
-  ): Promise<S> {
-    if (options?.connection)
-      console.warn(
-        'Since v5.0.1 "options.connection" is deprecated as is of no longer use.',
-      );
-    if (!entity)
-      throw new IllegalArgumentException('The given entity must be valid');
-    const entityClassName = entity['constructor']['name'];
-    if (!this.typeMap.has(entityClassName)) {
-      throw new IllegalArgumentException(
-        `The entity with name ${entityClassName} is not included in the setup of the custom repository`,
-      );
-    }
-    this.setDiscriminatorKeyOn(entity);
-    const document = this.createDocumentAndSetUserId(entity, options?.userId);
-    const insertedDocument = (await document.save({
-      session: options?.session,
-    })) as HydratedDocument<S>;
-    return this.instantiateFrom(insertedDocument) as S;
-  }
-
-  private setDiscriminatorKeyOn<S extends T>(
-    entity: S | PartialEntityWithId<S>,
-  ): void {
-    const entityClassName = entity['constructor']['name'];
-    const isSubtype = entityClassName !== this.typeMap.getSupertypeName();
-    const hasEntityDiscriminatorKey = '__t' in entity;
-    if (isSubtype && !hasEntityDiscriminatorKey) {
-      entity['__t'] = entityClassName;
-    }
-  }
-
-  private createDocumentAndSetUserId<S extends T>(entity: S, userId?: string) {
-    const document = new this.entityModel(entity);
-    if (isAuditable(entity)) {
-      if (userId) document.$locals.userId = userId;
-      document.__v = 0;
-    }
-    return document;
   }
 
   /**
@@ -279,10 +267,6 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
     entity: PartialEntityWithId<S>,
     options?: SaveOptions,
   ): Promise<S> {
-    if (options?.connection)
-      console.warn(
-        'Since v5.0.1 "options.connection" is deprecated as is of no longer use.',
-      );
     if (!entity)
       throw new IllegalArgumentException('The given entity must be valid');
     const document = await this.entityModel

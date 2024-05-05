@@ -36,9 +36,6 @@ export class MongooseBookRepository
   }
 }
 
-class PaperBook2 extends PaperBook {}
-class AudioBook2 extends AudioBook {}
-
 export class MongooseBookRepositoryWithoutBaseClass
   extends MongooseRepository<Book>
   implements BookRepository
@@ -47,8 +44,8 @@ export class MongooseBookRepositoryWithoutBaseClass
     super(
       {
         Default: { name: 'Book', schema: BookSchema },
-        PaperBook: { type: PaperBook2, schema: PaperBookSchema },
-        AudioBook: { type: AudioBook2, schema: AudioBookSchema },
+        PaperBook: { type: PaperBook, schema: PaperBookSchema },
+        AudioBook: { type: AudioBook, schema: AudioBookSchema },
       },
       OPTIONS,
     );

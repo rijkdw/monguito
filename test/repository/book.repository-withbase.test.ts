@@ -18,22 +18,11 @@ import {
   insert,
   setupConnection,
 } from '../util/mongo-server';
-import {
-  BookRepository,
-  MongooseBookRepository,
-  MongooseBookRepositoryWithoutBaseClass,
-} from './book.repository';
+import { BookRepository, MongooseBookRepository } from './book.repository';
 
 const COLLECTION_NAME = 'books_123';
 
-function getTable() {
-  return [
-    { repo: new MongooseBookRepository(), name: 'with base class' },
-    { repo: new MongooseBookRepositoryWithoutBaseClass(), name: 'without base class' },
-  ];
-}
-
-describe('Given an instance of book repository', () => {
+describe('Given an instance of book repository with a base Book class defined', () => {
   let bookRepository: BookRepository;
   let storedBook: Book;
   let storedPaperBook: PaperBook;
@@ -41,7 +30,7 @@ describe('Given an instance of book repository', () => {
 
   beforeAll(async () => {
     await setupConnection(MongoServerType.STANDALONE);
-    // bookRepository = new MongooseBookRepository();
+    bookRepository = new MongooseBookRepository();
   });
 
   describe('when searching a book by ID', () => {

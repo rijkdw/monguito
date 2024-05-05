@@ -25,6 +25,7 @@ import { Constructor, TypeMap, TypeMapImpl } from './util/type-map';
 export type MongooseRepositoryOptions = {
   connection?: Connection;
   collectionName?: string;
+  modelName?: string;
 };
 
 /**
@@ -37,6 +38,7 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
   protected readonly entityModel: Model<T>;
   protected readonly connection?: Connection;
   protected readonly collectionName?: string;
+  protected readonly modelName?: string;
 
   /**
    * Sets up the underlying configuration to enable database operation execution.
@@ -50,13 +52,19 @@ export abstract class MongooseRepository<T extends Entity & UpdateQuery<T>>
     this.typeMap = new TypeMapImpl(typeMap);
     this.connection = options?.connection;
     this.collectionName = options?.collectionName;
+    this.modelName = options?.modelName;
     this.entityModel = this.createEntityModel();
   }
 
   private createEntityModel() {
     let entityModel;
     const supertypeData = this.typeMap.getSupertypeData();
-    const modelName = this.typeMap.getSupertypeName();
+    const modelName = this.typeMap.getSupertypeName() ?? this.modelName;
+    if (!modelName) {
+      throw new IllegalArgumentException(
+        'Either a base class must be provided or the model name must be specified in the options.',
+      );
+    }
     const schema = supertypeData.schema;
     if (this.connection) {
       entityModel = this.connection.model<T>(

@@ -24,15 +24,10 @@ export type SubtypeData<T> = {
 /**
  * Models some domain object supertype data.
  */
-export type SupertypeData<T> =
-  | {
-      type: Constructor<T> | AbsConstructor<T>;
-      schema: Schema;
-    }
-  | {
-      name: string;
-      schema: Schema;
-    };
+export type SupertypeData<T> = {
+  type?: Constructor<T> | AbsConstructor<T>;
+  schema: Schema;
+};
 
 /**
  * Models a map of domain object subtypes.
@@ -65,11 +60,6 @@ export class TypeMapImpl<T extends Entity> {
       );
     }
     const superType = map.Default;
-    if (!('name' in superType) && !('type' in superType)) {
-      throw new IllegalArgumentException(
-        'The given domain supertype data must either have a name or a type',
-      );
-    }
     this.supertypeData = superType as SupertypeData<T>;
     this.typeNames = Object.keys(map).filter((key) => key !== 'Default');
     this.subtypeData = Object.entries(map).reduce((accumulator, entry) => {
@@ -91,10 +81,7 @@ export class TypeMapImpl<T extends Entity> {
   }
 
   getSupertypeName() {
-    if ('type' in this.supertypeData) {
-      return this.supertypeData.type.name;
-    }
-    return this.supertypeData.name;
+    return this.supertypeData.type?.name;
   }
 
   getSupertypeType() {

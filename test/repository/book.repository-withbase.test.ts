@@ -18,9 +18,12 @@ import {
   insert,
   setupConnection,
 } from '../util/mongo-server';
-import { BookRepository, MongooseBookRepository } from './book.repository';
+import {
+  BookRepository,
+  MongooseBookRepositoryWithBaseClass,
+} from './book.repository';
 
-const COLLECTION_NAME = 'books_123';
+const COLLECTION_NAME = 'books';
 
 describe('Given an instance of book repository with a base Book class defined', () => {
   let bookRepository: BookRepository;
@@ -30,7 +33,7 @@ describe('Given an instance of book repository with a base Book class defined', 
 
   beforeAll(async () => {
     await setupConnection(MongoServerType.STANDALONE);
-    bookRepository = new MongooseBookRepository();
+    bookRepository = new MongooseBookRepositoryWithBaseClass();
   });
 
   describe('when searching a book by ID', () => {

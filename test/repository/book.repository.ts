@@ -11,7 +11,7 @@ export interface BookRepository extends Repository<Book> {
   findByIsbn: <T extends Book>(isbn: string) => Promise<Optional<T>>;
 }
 
-export class MongooseBookRepositoryWithBaseClass
+export class MongooseBookRepository
   extends MongooseRepository<Book>
   implements BookRepository
 {
